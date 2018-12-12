@@ -45,7 +45,7 @@ read_cdphe <- function(url, date){
 
 e.g.
 
-```{r}
+```{r, eval = FALSE}
 url <- "https://www.colorado.gov/airquality/site.aspx?aqsid=080690009&seeddate=12%2f10%2f2018"
 date = as.Date("2018-12-10")
 head(read_cdphe(url, date))
