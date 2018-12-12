@@ -107,8 +107,10 @@ oct_2018 <- map2(meta_oct_2018$url, meta_oct_2018$date, read_cdphe) %>%
 
 ```{r}
 data <- bind_rows(dec_2018, nov_2018, oct_2018) %>%
-        mutate(datetime = paste0(date, " ", time, " MST"))
-        
+        mutate(datetime = with_tz(as.POSIXct(strptime(paste(date, time),
+                                  format = "%F %I:%M %p",
+                                  tz = "Etc/GMT+7")),
+                                  "US/Mountain"))
 ```
 
 ---
