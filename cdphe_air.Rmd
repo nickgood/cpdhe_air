@@ -62,9 +62,9 @@ load_cdphe_month <- function(site = "080690009",
   url_start <- "https://www.colorado.gov/airquality/site.aspx?aqsid="
   
   out <- data_frame(day = seq(1, days, 1)) %>%
-          mutate(date = as.Date(date),
-                 month = month(date),
+          mutate(month = month(date),
                  year = year(date),
+                 date = as.Date(paste0(year,"-",month,"-",day)),
                  url = paste0(url_start, site, "&seeddate=",
                               month, "%2f", day, "%2f", year))
 }
