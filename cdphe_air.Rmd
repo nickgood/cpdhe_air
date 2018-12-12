@@ -1,0 +1,22 @@
+---
+title: "CDPHE Air Quality Data"
+author: "Nicholas Good"
+output: html_document
+---
+
+```{r global_options, include=FALSE}
+  knitr::opts_chunk$set(fig.path = 'figures/SP_models/',
+                        warning = FALSE,
+                        message = FALSE,
+                        fig.width = 10, fig.height = 4,
+                        cache = FALSE,
+                        echo = FALSE)
+```
+
+```{r, echo = FALSE, include = FALSE}
+library(lubridate)
+library(knitr)
+library(dplyr)
+library(tidyr)
+library(purrr)
+```
