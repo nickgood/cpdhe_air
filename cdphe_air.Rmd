@@ -19,4 +19,96 @@ library(knitr)
 library(dplyr)
 library(tidyr)
 library(purrr)
+library(readr)
+library(XML)
 ```
+
+# Load one day
+
+```{r}
+read_cdphe <- function(url, date){
+  read_lines(url) %>%
+  data_frame() %>%
+  rename(val = ".") %>%
+  mutate(val = gsub("\\\\|\"", "", val)) %>%
+  filter(grepl("<td align=left class=cell>.*</td>", val)) %>%
+  mutate(val = gsub("<td align=left class=cell>|</td>", "", val),
+         val = sub("\\\t","", val),
+         n = rep(c("time", "pm_coarse", "pm_10", "pm_25"), times = nrow(.) / 4),
+         grp = rep(1:24, each = 4),
+         date = date) %>%
+  spread(n, val) %>%
+  select(date, time, pm_25, pm_10, pm_coarse) %>%
+  mutate_at(vars(pm_25, pm_10, pm_coarse), as.numeric)
+}
+```
+
+e.g.
+
+```{r}
+url <- "https://www.colorado.gov/airquality/site.aspx?aqsid=080690009&seeddate=12%2f10%2f2018"
+date = as.Date("2018-12-10")
+head(read_cdphe(url, date))
+```
+
+---
+
+# Build metadata for month
+
+```{r}
+load_cdphe_month <- function(site = "080690009",
+                             date,
+                             days){
+  url_start <- "https://www.colorado.gov/airquality/site.aspx?aqsid="
+  
+  out <- data_frame(day = seq(1, days, 1)) %>%
+          mutate(date = as.Date(date),
+                 month = month(date),
+                 year = year(date),
+                 url = paste0(url_start, site, "&seeddate=",
+                              month, "%2f", day, "%2f", year))
+}
+```
+
+---
+
+# Load month
+
+* December 2018
+
+```{r}
+meta_dec_2018 <- load_cdphe_month(date = "2018-12-01", days = 2)
+
+dec_2018 <- map2(meta_dec_2018$url, meta_dec_2018$date, read_cdphe) %>%
+            bind_rows()
+```
+
+* November 2018
+
+```{r}
+meta_nov_2018 <- load_cdphe_month(date = "2018-11-01", days = 30)
+
+nov_2018 <- map2(meta_nov_2018$url, meta_nov_2018$date, read_cdphe) %>%
+            bind_rows()
+```
+
+* October 2018
+
+```{r}
+meta_oct_2018 <- load_cdphe_month(date = "2018-10-01", days = 31)
+
+oct_2018 <- map2(meta_oct_2018$url, meta_oct_2018$date, read_cdphe) %>%
+            bind_rows()
+```
+
+---
+
+# Combine
+
+```{r}
+data <- bind_rows(dec_2018, nov_2018, oct_2018) %>%
+        mutate(datetime = paste0(date, " ", time, " MST"))
+        
+```
+
+---
