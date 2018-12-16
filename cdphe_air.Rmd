@@ -20,7 +20,6 @@ library(dplyr)
 library(tidyr)
 library(purrr)
 library(readr)
-library(XML)
 ```
 
 # Load one day
