@@ -113,3 +113,22 @@ data <- bind_rows(dec_2018, nov_2018, oct_2018) %>%
 ```
 
 ---
+
+# Sites
+
+```{r}
+url <- "https://www.colorado.gov/airquality/site_description.aspx"
+
+#read_cdphe_sites <- function(url, date){
+stations <- read_lines(url) %>%
+  data_frame() %>%
+  rename(val = ".") %>%
+  mutate(val = gsub("\\\\|\"|/", "", val)) %>%
+  filter(grepl("AQS ID", val)) %>%
+  mutate(name = sub("^<p><b>(.*)<b>.*", "\\1", val),
+         site_id = sub("^.*AQS ID: (.*)<br >Lat.*$", "\\1", val),
+         lat = sub("^.*Latitude: (.*)<br >Long.*$", "\\1", val),
+         lon = sub("^.*Longitude: (.*)<br >Report.*$", "\\1", val)) %>%
+  select(-val)
+```
+
