@@ -26,28 +26,37 @@ library(readr)
 
 ```{r}
 read_cdphe <- function(url, date){
-  read_lines(url) %>%
+  df <- read_lines(url) %>%
   data_frame() %>%
   rename(val = ".") %>%
   mutate(val = gsub("\\\\|\"", "", val)) %>%
-  filter(grepl("<td align=left class=cell>.*</td>", val)) %>%
-  mutate(val = gsub("<td align=left class=cell>|</td>", "", val),
-         val = sub("\\\t","", val),
-         n = rep(c("time", "pm_coarse", "pm_10", "pm_25"), times = nrow(.) / 4),
-         grp = rep(1:24, each = 4),
-         date = date) %>%
-  spread(n, val) %>%
+  filter(grepl("<td align=left class=cell>.*</td>", val))
+  
+if(nrow(df) > 1){
+  out <- df %>%
+         mutate(val = gsub("<td align=left class=cell>|</td>", "", val),
+                val = sub("\\\t","", val),
+                n = rep(c("time", "pm_coarse", "pm_10", "pm_25"), times = nrow(.) / 4),
+                grp = rep(1:24, each = 4),
+                date = date) %>%
+        spread(n, val) %>%
   select(date, time, pm_25, pm_10, pm_coarse) %>%
   mutate_at(vars(pm_25, pm_10, pm_coarse), as.numeric)
+}else{
+  out <- data_frame(date = date, time = "1:00 AM",
+                    pm_25 = NA_real_, pm_10 = NA_real_, pm_coarse = NA_real_)
+}
+return(out)
 }
 ```
 
 e.g.
 
 ```{r, eval = FALSE}
-url <- "https://www.colorado.gov/airquality/site.aspx?aqsid=080690009&seeddate=12%2f10%2f2018"
-date = as.Date("2018-12-10")
+url <- "https://www.colorado.gov/airquality/site.aspx?aqsid=080690009&seeddate=06%2f10%2f2018"
+date = as.Date("2012-06-10")
 head(read_cdphe(url, date))
+tmp <- read_cdphe(url, date)
 ```
 
 ---
@@ -100,12 +109,95 @@ oct_2018 <- map2(meta_oct_2018$url, meta_oct_2018$date, read_cdphe) %>%
             bind_rows()
 ```
 
+* September 2018
+
+```{r}
+meta_sep_2018 <- load_cdphe_month(date = "2018-09-01", days = 30)
+
+sep_2018 <- map2(meta_sep_2018$url, meta_sep_2018$date, read_cdphe) %>%
+            bind_rows()
+```
+
+* August 2018
+
+```{r}
+meta_aug_2018 <- load_cdphe_month(date = "2018-08-01", days = 31)
+
+aug_2018 <- map2(meta_aug_2018$url, meta_aug_2018$date, read_cdphe) %>%
+            bind_rows()
+```
+
+* July 2018
+
+```{r}
+meta_jul_2018 <- load_cdphe_month(date = "2018-07-01", days = 31)
+
+jul_2018 <- map2(meta_jul_2018$url, meta_jul_2018$date, read_cdphe) %>%
+            bind_rows()
+```
+
+* June 2018
+
+```{r}
+meta_jun_2018 <- load_cdphe_month(date = "2018-06-01", days = 30)
+
+jun_2018 <- map2(meta_jun_2018$url, meta_jun_2018$date, read_cdphe) %>%
+            bind_rows()
+```
+
+* May 2018
+
+```{r}
+meta_may_2018 <- load_cdphe_month(date = "2018-05-01", days = 31)
+
+may_2018 <- map2(meta_may_2018$url, meta_may_2018$date, read_cdphe) %>%
+            bind_rows()
+```
+
+* April 2018
+
+```{r}
+meta_apr_2018 <- load_cdphe_month(date = "2018-04-01", days = 30)
+
+apr_2018 <- map2(meta_apr_2018$url, meta_apr_2018$date, read_cdphe) %>%
+            bind_rows()
+```
+
+* March 2018
+
+```{r}
+meta_mar_2018 <- load_cdphe_month(date = "2018-03-01", days = 31)
+
+mar_2018 <- map2(meta_mar_2018$url, meta_mar_2018$date, read_cdphe) %>%
+            bind_rows()
+```
+
+* February 2018
+
+```{r}
+meta_feb_2018 <- load_cdphe_month(date = "2018-02-01", days = 28)
+
+feb_2018 <- map2(meta_feb_2018$url, meta_feb_2018$date, read_cdphe) %>%
+            bind_rows()
+```
+
+* January 2018
+
+```{r}
+meta_jan_2018 <- load_cdphe_month(date = "2018-01-01", days = 31)
+
+jan_2018 <- map2(meta_jan_2018$url, meta_jan_2018$date, read_cdphe) %>%
+            bind_rows()
+```
+
 ---
 
 # Combine
 
 ```{r}
-data <- bind_rows(dec_2018, nov_2018, oct_2018) %>%
+data <- bind_rows(jan_2018, feb_2018, mar_2018, apr_2018,
+                  may_2018, jun_2018, jul_2018, aug_2018,
+                  sep_2018, oct_2018, nov_2018, dec_2018) %>%
         mutate(datetime = with_tz(as.POSIXct(strptime(paste(date, time),
                                   format = "%F %I:%M %p",
                                   tz = "Etc/GMT+7")),
